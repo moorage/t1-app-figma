@@ -5,6 +5,7 @@ import {
   AuthorizeRedirect,
   AuthorizationResult,
   AppAuthConfig,
+  custom_processAuthorizationCodeOAuth2Response,
 } from "t1-app-types";
 
 const allScopes = [
@@ -142,7 +143,7 @@ const callback = async (
     sessionStorageValues?.codeVerifier!
   );
 
-  const result = await oauth.processAuthorizationCodeResponse(
+  const result = await custom_processAuthorizationCodeOAuth2Response(
     oauthServer,
     oauth2Client,
     response

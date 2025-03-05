@@ -1,4 +1,5 @@
 import * as oauth from "oauth4webapi";
+import { custom_processAuthorizationCodeOAuth2Response, } from "t1-app-types";
 const allScopes = [
     "files:read",
     "file_variables:read", // enterprise only
@@ -82,7 +83,7 @@ const callback = async (requestUrl, originalRedirectUri, sessionStorageValues, g
     const params = oauth.validateAuthResponse(oauthServer, oauth2Client, new URL(requestUrl), sessionStorageValues?.state ?? undefined);
     const clientAuth = oauth.ClientSecretPost(secrets.CLIENT_SECRET);
     const response = await oauth.authorizationCodeGrantRequest(oauthServer, oauth2Client, clientAuth, params, originalRedirectUri, sessionStorageValues?.codeVerifier);
-    const result = await oauth.processAuthorizationCodeResponse(oauthServer, oauth2Client, response);
+    const result = await custom_processAuthorizationCodeOAuth2Response(oauthServer, oauth2Client, response);
     const tokenResponse = result;
     console.log("Figma result", result);
     // make a call to https://api.figma.com/v1/me to get the user's email
