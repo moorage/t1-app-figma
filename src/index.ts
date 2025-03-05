@@ -186,7 +186,6 @@ const callback = async (
     response
   );
   const tokenResponse = result as FigmaOAuthTokenResponse;
-  console.log("Figma result", result);
 
   // make a call to https://api.figma.com/v1/me to get the user's email
   const userResponse = await fetch("https://api.figma.com/v1/me", {

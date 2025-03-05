@@ -110,7 +110,6 @@ const callback = async (requestUrl, originalRedirectUri, sessionStorageValues, g
     const response = await custom_authorizationCodeGrantRequest(secrets.CLIENT_ID, secrets.CLIENT_SECRET, code ?? "", originalRedirectUri, sessionStorageValues?.codeVerifier ?? "");
     const result = await custom_processAuthorizationCodeOAuth2Response(oauthServer, oauth2Client, response);
     const tokenResponse = result;
-    console.log("Figma result", result);
     // make a call to https://api.figma.com/v1/me to get the user's email
     const userResponse = await fetch("https://api.figma.com/v1/me", {
         headers: {
