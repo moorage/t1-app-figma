@@ -38,7 +38,7 @@ const oauthServer: oauth.AuthorizationServer = {
   response_types_supported: ["code"],
   grant_types_supported: ["authorization_code"],
   token_endpoint_auth_methods_supported: [
-    "client_secret_post",
+    // "client_secret_post",
     "client_secret_basic",
   ],
   code_challenge_methods_supported: ["S256"],
@@ -99,7 +99,7 @@ const authorizeRedirect = async (
 };
 
 type FigmaOAuthTokenResponse = {
-  user_id: string;
+  user_id: number;
   access_token: string;
   token_type: string;
   expires_in: number;
@@ -112,6 +112,44 @@ type FigmaMeResponse = {
   handle: string;
   img_url: string;
 };
+
+/**
+ * This is a custom implementation of the authorizationCodeGrantRequest function in oauth4webapi.
+ * Figma has a goofy implementation of the OAuth 2.0 spec.
+ */
+async function custom_authorizationCodeGrantRequest(
+  clientId: string,
+  clientSecret: string,
+  paramsCode: string,
+  originalRedirectUri: string,
+  codeVerifier: string
+) {
+  // Create Base64-encoded credentials for Basic Auth
+  const credentials = Buffer.from(`${clientId}:${clientSecret}`).toString(
+    "base64"
+  );
+
+  // Prepare form data
+  const formData = new URLSearchParams({
+    redirect_uri: originalRedirectUri,
+    code: paramsCode,
+    grant_type: "authorization_code",
+    code_verifier: codeVerifier || "",
+  });
+
+  console.warn("formData", formData.toString());
+
+  const res = await fetch("https://api.figma.com/v1/oauth/token", {
+    method: "POST",
+    headers: {
+      Authorization: `Basic ${credentials}`,
+      "Content-Type": "application/x-www-form-urlencoded",
+    },
+    body: formData.toString(),
+  });
+
+  return res;
+}
 
 const callback = async (
   requestUrl: string,
@@ -133,14 +171,13 @@ const callback = async (
     sessionStorageValues?.state ?? undefined
   );
 
-  const clientAuth = oauth.ClientSecretPost(secrets.CLIENT_SECRET!);
-  const response = await oauth.authorizationCodeGrantRequest(
-    oauthServer,
-    oauth2Client,
-    clientAuth,
-    params,
+  const code = params.get("code");
+  const response = await custom_authorizationCodeGrantRequest(
+    secrets.CLIENT_ID,
+    secrets.CLIENT_SECRET,
+    code ?? "",
     originalRedirectUri,
-    sessionStorageValues?.codeVerifier!
+    sessionStorageValues?.codeVerifier ?? ""
   );
 
   const result = await custom_processAuthorizationCodeOAuth2Response(
@@ -163,9 +200,9 @@ const callback = async (
   const user: FigmaMeResponse = await userResponse.json();
 
   const mappedResult: AuthorizationResult = {
-    providerAccountId: tokenResponse.user_id,
+    providerAccountId: String(tokenResponse.user_id),
     accessToken: tokenResponse.access_token,
-    email: null,
+    email: user.email,
     type: "oauth",
     tokenType: tokenResponse.token_type,
     refreshToken: tokenResponse.refresh_token ?? null,
