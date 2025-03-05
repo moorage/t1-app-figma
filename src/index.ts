@@ -175,6 +175,8 @@ const callback = async (
 };
 
 const config: AppConfig = {
+  majorVersion: 1,
+  minorVersion: 0,
   provider: "figma",
   displayName: "Figma",
   tier1UniqueId: "COM_FIGMA",
