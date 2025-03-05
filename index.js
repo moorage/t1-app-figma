@@ -40,6 +40,8 @@ const authorizeRedirect = async (redirectUri, getSecrets, scopes) => {
     const code_verifier = oauth.generateRandomCodeVerifier();
     const code_challenge = await oauth.calculatePKCECodeChallenge(code_verifier);
     let state;
+    // state is required by figma or you get `Parameter state is required` error
+    state = code_challenge;
     // redirect user to as.authorization_endpoint
     const authorizationUrl = new URL(oauthServer.authorization_endpoint);
     authorizationUrl.searchParams.set("client_id", secrets.CLIENT_ID);
@@ -48,18 +50,19 @@ const authorizeRedirect = async (redirectUri, getSecrets, scopes) => {
     authorizationUrl.searchParams.set("scope", scope);
     authorizationUrl.searchParams.set("code_challenge", code_challenge);
     authorizationUrl.searchParams.set("code_challenge_method", "S256");
+    authorizationUrl.searchParams.set("state", state);
     /**
      * We cannot be sure the AS supports PKCE so we're going to use state too. Use of PKCE is
      * backwards compatible even if the AS doesn't support it which is why we're using it regardless.
      */
-    if (oauthServer.code_challenge_methods_supported?.includes("S256") !== true) {
-        state = oauth.generateRandomState();
-        authorizationUrl.searchParams.set("state", state);
-    }
+    // if (oauthServer.code_challenge_methods_supported?.includes("S256") !== true) {
+    //   state = oauth.generateRandomState();
+    //   authorizationUrl.searchParams.set("state", state);
+    // }
     const sessionStorageValues = {
         codeVerifier: code_verifier,
         codeChallenge: code_challenge,
-        state: state ?? null,
+        state: state,
         scope: scope,
     };
     // now redirect the user to authorizationUrl.href
