@@ -44,6 +44,7 @@ const oauthServer: oauth.AuthorizationServer = {
 };
 
 const authorizeRedirect = async (
+  redirectUri: string,
   getSecrets: RequestAppSecretsFunction,
   scopes: string[] | null
 ): Promise<AuthorizeRedirect> => {
@@ -64,7 +65,7 @@ const authorizeRedirect = async (
   // redirect user to as.authorization_endpoint
   const authorizationUrl = new URL(oauthServer.authorization_endpoint!);
   authorizationUrl.searchParams.set("client_id", secrets.CLIENT_ID);
-  authorizationUrl.searchParams.set("redirect_uri", secrets.REDIRECT_URI);
+  authorizationUrl.searchParams.set("redirect_uri", redirectUri);
   authorizationUrl.searchParams.set("response_type", "code");
   authorizationUrl.searchParams.set("scope", scope);
   authorizationUrl.searchParams.set("code_challenge", code_challenge);
@@ -109,6 +110,7 @@ type FigmaMeResponse = {
 
 const callback = async (
   requestUrl: string,
+  originalRedirectUri: string,
   sessionStorageValues: Record<string, string | null> | null,
   getSecrets: RequestAppSecretsFunction
 ): Promise<AuthorizationResult> => {
@@ -132,7 +134,7 @@ const callback = async (
     oauth2Client,
     clientAuth,
     params,
-    secrets.REDIRECT_URI!,
+    originalRedirectUri,
     sessionStorageValues?.codeVerifier!
   );
 

@@ -26,7 +26,7 @@ const oauthServer = {
     code_challenge_methods_supported: ["S256"],
     // Figma does not provide a userinfo endpoint in its standard OAuth 2.0 flow
 };
-const authorizeRedirect = async (getSecrets, scopes) => {
+const authorizeRedirect = async (redirectUri, getSecrets, scopes) => {
     const secrets = await getSecrets({
         CLIENT_ID: null,
         CLIENT_SECRET: null,
@@ -43,7 +43,7 @@ const authorizeRedirect = async (getSecrets, scopes) => {
     // redirect user to as.authorization_endpoint
     const authorizationUrl = new URL(oauthServer.authorization_endpoint);
     authorizationUrl.searchParams.set("client_id", secrets.CLIENT_ID);
-    authorizationUrl.searchParams.set("redirect_uri", secrets.REDIRECT_URI);
+    authorizationUrl.searchParams.set("redirect_uri", redirectUri);
     authorizationUrl.searchParams.set("response_type", "code");
     authorizationUrl.searchParams.set("scope", scope);
     authorizationUrl.searchParams.set("code_challenge", code_challenge);
@@ -68,7 +68,7 @@ const authorizeRedirect = async (getSecrets, scopes) => {
         sessionStorageValues: sessionStorageValues,
     };
 };
-const callback = async (requestUrl, sessionStorageValues, getSecrets) => {
+const callback = async (requestUrl, originalRedirectUri, sessionStorageValues, getSecrets) => {
     const secrets = await getSecrets({
         CLIENT_ID: null,
         CLIENT_SECRET: null,
@@ -78,7 +78,7 @@ const callback = async (requestUrl, sessionStorageValues, getSecrets) => {
     };
     const params = oauth.validateAuthResponse(oauthServer, oauth2Client, new URL(requestUrl), sessionStorageValues?.state ?? undefined);
     const clientAuth = oauth.ClientSecretPost(secrets.CLIENT_SECRET);
-    const response = await oauth.authorizationCodeGrantRequest(oauthServer, oauth2Client, clientAuth, params, secrets.REDIRECT_URI, sessionStorageValues?.codeVerifier);
+    const response = await oauth.authorizationCodeGrantRequest(oauthServer, oauth2Client, clientAuth, params, originalRedirectUri, sessionStorageValues?.codeVerifier);
     const result = await oauth.processAuthorizationCodeResponse(oauthServer, oauth2Client, response);
     const tokenResponse = result;
     console.log("Figma result", result);
