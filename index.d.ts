@@ -1,4 +1,4 @@
-import { AppConfig } from "t1-app-types";
-declare const config: AppConfig;
-export default config;
+import { AppConfig, AppAuthConfig } from "t1-app-types";
+export declare const appConfig: AppConfig;
+export declare const appAuthConfig: AppAuthConfig;
 //# sourceMappingURL=index.d.ts.map
